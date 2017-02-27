@@ -1,34 +1,61 @@
-# Boggle
-# Given a Boggle board, solve for the list of possible words
+"""
+    File name: boggle.py
+    Author: Shree Raj Shrestha and Alexandra DeLucia
+    Date created: 2/16/2017
+    Date last modified: 2/26/2017
+    Python Version: 2.7
+"""
+
 import sys
 from copy import deepcopy
 from random import random
 
+
 class Grid(object):
-    """Grid
-    
-    grid: matrix of elements
     """
+    Represents a grid object
+    :attr grid: matrix of elements representing boggle board
+    :attr dimension: the number of rows/columns in the square grid
+    """
+    
     def __init__(self, grid):
+        """
+        Default constructor for te Grid class
+        :param grid: matrix of elements representing boggle board
+        """
         assert isinstance(grid, list)
         assert sum([len(grid[i]) != len(grid) for i in range(len(grid))]) == 0
         self.grid = grid
         self.dimension = len(grid)
     
+    
     def __str__(self):
+        """
+        :return string: a string representation of the boggle board
+        """
         string = ''
         for row in self.grid:
             for element in row:
                 string += element + ' '
-            st
-            ring += '\n'
+            string += '\n'
         return string
     
+    
     def getElement(self, position):
+        """
+        Returns element at coordinate position
+        :param position: coordinate position in the grid
+        :return char: element at given position
+        """
         assert isinstance(position, tuple)
         letter = self.grid[position[0]][position[1]]
         return letter
     
+    """
+    Returns a list of positions near given position in te grid
+    :param position: coordinate position in grid
+    :return list: list of nearby positions
+    """
     def getNearbyPositions(self, position):
         assert isinstance(position, tuple)
         positions = []
@@ -53,28 +80,49 @@ class WordState(object):
 
 
 def search(this_state, grid, prefix_hash, found_words):
+    """
+    The recursive method that implements the breadth first search stack.
+    :param this_state: the current state
+    :param grid: the grid of words
+    :param prefix_hash: dictionary of all possible prefixes
+    :param found_words: the list of words found so far
+    """
     
+    # Make a copy of the current state and add current state to path
     new_visited = deepcopy(this_state.visited_positions)
     new_value = deepcopy(this_state.current_value)
-    
     new_visited.append(this_state.position)
     new_value += grid.getElement(this_state.position)
     
+    # Append to found words if word is in prefix, unique, and complete
     if new_value in prefix_hash and prefix_hash[new_value] == 1 and new_value not in found_words:
         found_words.append(new_value)
     
+    # Loope through all the positions in the grid and recursively search
+    # exhaustively until the end
     for position in grid.getNearbyPositions(this_state.position):
+        
+        # Only visit unique positions, i.e. not in path
         if position not in this_state.visited_positions:
-            
             potential_value = new_value + grid.getElement(position)
+            
+            # Trim invalid states, only expand to valid states
             if potential_value in prefix_hash:
                 potential_state = WordState(position, new_visited, new_value)
-                found_words += search(potential_state, grid, prefix_hash, [])
+                search(potential_state, grid, prefix_hash, found_words)
     
     return found_words
 
 
 def exhaustive_bfs(position, grid, prefix_hash):
+    """
+    Implements the breadth first search using recursive function call
+    to implememnt the bfs stack.
+    :param position: starting position on the grid
+    :param grid: the grid representing the boggle board
+    :param prefix_hash: the dictionary of all possible subwords in word list
+    :return list: all possible words in the configuration
+    """
     
     # Initialize word state
     initial_state = WordState(position, [], '')
@@ -82,22 +130,20 @@ def exhaustive_bfs(position, grid, prefix_hash):
 
 
 def build_prefix_hash(file_path):
-    """Returns a dictionary of all valid words and their sub-states
-    file_path: text file containing list of words
+    """
+    Returns a dictionary of all valid words and their sub-states.
+    :param file_path: text file containing list of words
+    :return list: dictionary of all possible subwords in the word list
     """
     file = open(file_path)
-    
-    # prefix_hash
-    # key: prefix
-    # value: 1 if in final valid state, 0 otherwise
-    # i.e. 'gy' = 0, 'gyro' = 1
     prefix_hash = {}
     
     for line in file:
-        # Strip white space
         word = line.strip()
+        
         # Only keep words of at least length 3
         if len(word) >= 3:
+            
             # Add all substates of the word to the dictionary
             # Starting from length 2 (list of valid word beginnings)
             for i in range(2, len(word)+1):
@@ -105,6 +151,7 @@ def build_prefix_hash(file_path):
                 
                 # Check if in dictionary before adding
                 if prefix not in prefix_hash:
+                    
                     # If word is a completed word (i.e. in a valid final state)
                     # set value = 1
                     # This will only work if word_list is in alphabetical order
@@ -118,10 +165,15 @@ def build_prefix_hash(file_path):
 
 
 def main():
-    """Solves a Boggle board for all possible words
     """
-    word_list_file_path = 'words.txt'
+    Solves a Boggle board for all possible words using exhaustive breadth
+    first technique.
+    :param: none
+    :return: none
+    """
     
+    # Initalize starting parameters
+    word_list_file_path = 'words.txt'
     example_grid = [['u', 'n', 't', 'h'],['g','a','e','s'],['s','r','t','r'],['h','m','i','a']]
     grid = Grid(example_grid)
     prefix_hash = build_prefix_hash(word_list_file_path)
