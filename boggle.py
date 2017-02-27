@@ -1,8 +1,8 @@
 """
-    File name: boggle.py
+    File name: Boggle.py
     Author: Shree Raj Shrestha and Alexandra DeLucia
     Date created: 2/16/2017
-    Date last modified: 2/26/2017
+    Date last modified: 2/27/2017
     Python Version: 2.7
 """
 
@@ -14,14 +14,14 @@ from random import random
 class Grid(object):
     """
     Represents a grid object
-    :attr grid: matrix of elements representing boggle board
+    :attr grid: matrix of elements representing Boggle board
     :attr dimension: the number of rows/columns in the square grid
     """
     
     def __init__(self, grid):
         """
         Default constructor for te Grid class
-        :param grid: matrix of elements representing boggle board
+        :param grid: matrix of elements representing Boggle board
         """
         assert isinstance(grid, list)
         assert sum([len(grid[i]) != len(grid) for i in range(len(grid))]) == 0
@@ -31,7 +31,7 @@ class Grid(object):
     
     def __str__(self):
         """
-        :return string: a string representation of the boggle board
+        :return string: a string representation of the Boggle board
         """
         string = ''
         for row in self.grid:
@@ -67,8 +67,8 @@ class Grid(object):
 
 
 class WordState(object):
-    """Word_State
-    
+    """
+    Represents the state of a word being created from the Boggle board
     start_position: coordinates of starting element
     visited_positions: list of coordinates of elements in word
     current_value: current string of words
@@ -81,7 +81,7 @@ class WordState(object):
 
 def search(this_state, grid, prefix_hash, found_words):
     """
-    The recursive method that implements the breadth first search stack.
+    The recursive method that implements the depth first search stack.
     :param this_state: the current state
     :param grid: the grid of words
     :param prefix_hash: dictionary of all possible prefixes
@@ -114,12 +114,14 @@ def search(this_state, grid, prefix_hash, found_words):
     return found_words
 
 
-def exhaustive_bfs(position, grid, prefix_hash):
+def exhaustive_dfs(position, grid, prefix_hash):
     """
-    Implements the breadth first search using recursive function call
-    to implememnt the bfs stack.
+    Implements the depth first search using recursive function call
+    to implememnt the dfs stack. The search is considered "exahustive" because
+    the solution is all solutions, the exit condition is when there are no more
+    nodes to expand.
     :param position: starting position on the grid
-    :param grid: the grid representing the boggle board
+    :param grid: the grid representing the Boggle board
     :param prefix_hash: the dictionary of all possible subwords in word list
     :return list: all possible words in the configuration
     """
@@ -166,7 +168,7 @@ def build_prefix_hash(file_path):
 
 def main():
     """
-    Solves a Boggle board for all possible words using exhaustive breadth
+    Solves a Boggle board for all possible words using exhaustive depth
     first technique.
     :param: none
     :return: none
