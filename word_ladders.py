@@ -106,6 +106,8 @@ def search(this_state, state_space, depth_limit):
             # Only try state if it improves the solution
             if this_state.get_depth_to_destination(state) < depth_limit:
                 trimmed_state_space.append(state)
+    
+    print len(state_space), len(trimmed_state_space)
 
     # Expand current path by trying all possible words in the trimmed domain
     new_path = deepcopy(this_state.path)
@@ -119,7 +121,7 @@ def search(this_state, state_space, depth_limit):
             new_state = State(potential_state, this_state.dest_state, new_path)
 
             # Reduce limit by 1 and recursively search from new state
-            path = search(new_state, state_space, depth_limit - 1)
+            path = search(new_state, trimmed_state_space, depth_limit - 1)
 
             # Recursive call ends, return path if it is not empty
             if path != []:
