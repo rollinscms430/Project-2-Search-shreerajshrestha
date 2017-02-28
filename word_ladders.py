@@ -2,7 +2,7 @@
     File name: word_ladders.py
     Author: Shree Raj Shrestha and Alexandra DeLucia
     Date created: 2/16/2017
-    Date last modified: 2/26/2017
+    Date last modified: 2/27/2017
     Python Version: 2.7
 """
 
@@ -38,7 +38,7 @@ class State(object):
         Returns object as formatted string.
         :return string: the formatted string object of state
         """
-        return state + " " + dest_state + " " + str(path)
+        return self.state + " " + self.dest_state + " " + str(self.path)
 
 
     def is_final_state(self):
@@ -106,8 +106,6 @@ def search(this_state, state_space, depth_limit):
             # Only try state if it improves the solution
             if this_state.get_depth_to_destination(state) < depth_limit:
                 trimmed_state_space.append(state)
-    
-    print len(state_space), len(trimmed_state_space)
 
     # Expand current path by trying all possible words in the trimmed domain
     new_path = deepcopy(this_state.path)

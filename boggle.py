@@ -186,7 +186,7 @@ def main():
     # Each element can be used as a starting position
     for row in range(grid.dimension):
         for column in range(grid.dimension):
-            words = exhaustive_bfs((row, column), grid, prefix_hash)
+            words = exhaustive_dfs((row, column), grid, prefix_hash)
             total_words += words
     
     for word in total_words:
