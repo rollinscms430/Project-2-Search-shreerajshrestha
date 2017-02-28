@@ -1,5 +1,5 @@
 """
-    File name: Boggle.py
+    File name: boggle.py
     Author: Shree Raj Shrestha and Alexandra DeLucia
     Date created: 2/16/2017
     Date last modified: 2/27/2017

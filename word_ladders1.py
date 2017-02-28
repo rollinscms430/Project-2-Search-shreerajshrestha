@@ -31,15 +31,13 @@ class State(object):
         self.state = init_state
         self.dest_state = dest_state
         self.path = path
-    
-    
+
     def __str__(self):
         """
         Returns object as formatted string.
         :return string: the formatted string object of state
         """
         return self.state + " " + self.dest_state + " " + str(self.path)
-
 
     def is_final_state(self):
         """
@@ -48,16 +46,14 @@ class State(object):
         """
         return self.state == self.dest_state
 
-
     def get_minimum_path_depth(self):
         """
         Returns minimum depth required to get from current state to destination.
-        The theoritical minimum depth it number of different characters 
+        The theoritical minimum depth it number of different characters
         between inital and destination state.
         :return int: minimum theoritical depth to destination
         """
         return sum(self.state[i] != self.dest_state[i] for i in range(len(self.state)))
-
 
     def get_depth_from_origin(self, state):
         """
@@ -69,96 +65,71 @@ class State(object):
 
     def get_depth_to_destination(self, state):
         """
-        Returns the theoritical distance to destination state, which
+        Returns the theoretical distance to destination state, which
         is equal to the number of characters needed to be changed.
         :return int: depth from the origin to given state
         """
         assert isinstance(state, str)
         return sum(state[i] != self.dest_state[i] for i in range(len(state)))
 
+    def is_improved(self, potential_state):
+        """
+        Returns Boolean of whether the potential state can improve the distance
+        to the destination
+        :param potential_state:
+        :return boolean:
+        """
+        return self.get_depth_to_destination(self.state) <= self.get_depth_to_destination(potential_state)
 
-def search(this_state, state_space, depth_limit):
-    """
-    The recursive solution to the word puzzle for iterative deepening search.
-    :param this_state: current state
-    :param state_space: collection of all possible states (i.e. word list)
-    :param depth_limit: max depth from origin to search until
-    :return list: words that lead from initial to destination state
-    """
-    # If final state is found, return the solution
-    if this_state.is_final_state():
-        solution_path = this_state.path
-        solution_path.append(this_state.state)
-        return solution_path
 
-    # If the depth limit has been reached, return empty list
-    if depth_limit < 0:
-        return []
+def add_to_visited(state, visited):
+    visited[state.state] = 1
 
-    # Trim the domain of the state space
-    trimmed_state_space = []
-    for state in state_space:
 
-        # Only try a state if below one depth level
-        # i.e. Only a distance of 1 step
-        if this_state.get_depth_from_origin(state) == 1:
+def already_visited(state, visited):
+    return state.state in visited
 
-            # Only try state if it improves the solution
-            if this_state.get_depth_to_destination(state) < depth_limit:
+
+def solve(init_word, dest_word, state_space):
+    # Initialize the word ladder game
+    this_state = State(init_word, dest_word, [init_word])
+
+    # Maintain a queue of frontier states
+    queue = []
+    queue.append(this_state)
+
+    # Dictionary of previously expanded states
+    visited = {}
+
+    # Search for solution until queue of nodes to expand is empty
+    while len(queue) > 0:
+        this_state = queue.pop(0)
+
+        # If state is the final word, then the work is done
+        if this_state.is_final_state():
+            return this_state.path
+
+        # Trim the domain of the state space
+        trimmed_state_space = []
+        for state in state_space:
+
+            # Only try a state if below one depth level
+            # i.e. Only a distance of 1 step
+            if this_state.get_depth_from_origin(state) == 1:
                 trimmed_state_space.append(state)
 
-    # Expand current path by trying all possible words in the trimmed domain
-    new_path = deepcopy(this_state.path)
-    new_path.append(this_state.state)
-    for potential_state in trimmed_state_space:
-
-        # If state is in the path, loop forms, so ignore to prevent looping
-        if potential_state not in this_state.path:
-
-            # Add word to the path and create a new state
+        for potential_state in trimmed_state_space:
+            new_path = deepcopy(this_state.path)
+            new_path.append(potential_state)
             new_state = State(potential_state, this_state.dest_state, new_path)
 
-            # Reduce limit by 1 and recursively search from new state
-            path = search(new_state, state_space, depth_limit - 1)
-
-            # Recursive call ends, return path if it is not empty
-            if path != []:
-                return path
-
-    # Return empty path by default
-    return []
-
-
-def iterative_deepening_dfs(init_state, dest_state, state_space, max_depth):
-    """
-    Implements the iterative deepening search technique. Do depth first
-    search starting at a minimum depth to maximum depth, if solution not found.
-    :param init_state: the initial state of the puzzle
-    :param dest_state: the destination state of the puzzle
-    :param state_space: collection of all possible states (i.e. word list)
-    :param max_depth: max depth for iterative dfs
-    :return list: words that lead from initial to destination state
-    """
-    
-    # Initialize the word ladder game
-    initial_state = State(init_state, dest_state, [])
-
-    # The minimum for number of optimal moves is the number of
-    # different characters since one move allows one character change
-    depth_limit = initial_state.get_minimum_path_depth()
-
-    # Loop until solution is found or maximum depth is reached
-    while depth_limit < max_depth:
-        print "Searching at depth level ", depth_limit
-        solution = search(initial_state, state_space, depth_limit)
-        if len(solution) > 0:
-            return solution
-        else:
-            print depth_limit, " is not deep enough!\n"
-            depth_limit += 1
-
-    # Return empty list by default
-    return []
+            # Only add the new state if not previously generated
+            current_cost = this_state.get_depth_from_origin(init_word) + this_state.get_depth_to_destination(new_state.state)
+            potential_cost = new_state.get_depth_to_destination(potential_state) + 1 # Cost to potential state is 1
+            if not already_visited(new_state, visited) or potential_cost < current_cost:
+                add_to_visited(new_state, visited)
+                queue.append(new_state)
+                #print new_state
 
 
 def generate_word_list(file_path, word):
@@ -169,7 +140,7 @@ def generate_word_list(file_path, word):
     """
     try:
         word_list = []
-        
+
         for line in open(file_path):
             this_word = line.strip()
             if len(this_word) == len(word):
@@ -191,7 +162,7 @@ def main():
     :param: none
     :return: none
     """
-    
+
     # Initialize default parameters
     file_path = 'words.txt'
     word1 = 'snakes'
@@ -216,15 +187,8 @@ def main():
     # Generate a list of words with same length as the initial word
     word_list = generate_word_list(file_path, word1)
 
-    # Solve the word ladder puzzle using iterative deepening dfs technique
-    # NOTE: The theoretical maximum for moves is size of the word list minus 1
-    # Proof: For word list ['do','de','be','by','my']
-    # Assuming that words in path cannot be used
-    # From 'do' to 'my', the only possible path is the list itself in order
-    # The number of moves in this case is 4, size of list minus 1
-    max_depth = len(word_list) - 1
-    solution = iterative_deepening_dfs(word1, word2, word_list, max_depth)
-    if solution is not []:
+    solution = solve(word1, word2, word_list)
+    if solution:
         for word in solution:
             print word
     else:
