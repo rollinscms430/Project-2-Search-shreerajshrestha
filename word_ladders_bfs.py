@@ -45,16 +45,8 @@ class State(object):
         :return boolean:
         """
         return self.state == self.dest_state
-
-    def get_minimum_path_depth(self):
-        """
-        Returns minimum depth required to get from current state to destination.
-        The theoritical minimum depth it number of different characters
-        between inital and destination state.
-        :return int: minimum theoritical depth to destination
-        """
-        return sum(self.state[i] != self.dest_state[i] for i in range(len(self.state)))
-
+    
+    
     def get_depth_from_origin(self, state):
         """
         Returns the number of different characters needed to be changed.
@@ -62,24 +54,6 @@ class State(object):
         """
         assert isinstance(state, str)
         return sum(state[i] != self.state[i] for i in range(len(state)))
-
-    def get_depth_to_destination(self, state):
-        """
-        Returns the theoretical distance to destination state, which
-        is equal to the number of characters needed to be changed.
-        :return int: depth from the origin to given state
-        """
-        assert isinstance(state, str)
-        return sum(state[i] != self.dest_state[i] for i in range(len(state)))
-
-    def is_improved(self, potential_state):
-        """
-        Returns Boolean of whether the potential state can improve the distance
-        to the destination
-        :param potential_state:
-        :return boolean:
-        """
-        return self.get_depth_to_destination(self.state) <= self.get_depth_to_destination(potential_state)
 
 
 def add_to_visited(state, visited):
@@ -90,46 +64,54 @@ def already_visited(state, visited):
     return state.state in visited
 
 
-def solve(init_word, dest_word, state_space):
-    # Initialize the word ladder game
-    this_state = State(init_word, dest_word, [init_word])
+def solve(start_word, dest_word):
 
+    # Initialize the word ladder game
+    init_state = State(start_word, dest_word, [start_word])
+    
+    
+    """
+    
+    """
+    
     # Maintain a queue of frontier states
     queue = []
-    queue.append(this_state)
+    queue.append(init_state)
 
     # Dictionary of previously expanded states
     visited = {}
 
     # Search for solution until queue of nodes to expand is empty
     while len(queue) > 0:
+        
+        print len(queue)
+        
         this_state = queue.pop(0)
 
         # If state is the final word, then the work is done
         if this_state.is_final_state():
             return this_state.path
 
-        # Trim the domain of the state space
-        trimmed_state_space = []
-        for state in state_space:
-
-            # Only try a state if below one depth level
-            # i.e. Only a distance of 1 step
-            if this_state.get_depth_from_origin(state) == 1:
-                trimmed_state_space.append(state)
-
-        for potential_state in trimmed_state_space:
-            new_path = deepcopy(this_state.path)
-            new_path.append(potential_state)
-            new_state = State(potential_state, this_state.dest_state, new_path)
-
-            # Only add the new state if not previously generated
-            current_cost = this_state.get_depth_from_origin(init_word) + this_state.get_depth_to_destination(new_state.state)
-            potential_cost = new_state.get_depth_to_destination(potential_state) + 1 # Cost to potential state is 1
-            if not already_visited(new_state, visited) or potential_cost < current_cost:
-                add_to_visited(new_state, visited)
-                queue.append(new_state)
-                #print new_state
+        for i in range(0, len(start_word)):
+            
+            word_char = list(start_word)
+            word_char[i] = ''
+            
+            for j in range(0,26):
+                char = chr(97 + j)  # chr(97) = 'a'
+                word_char[i] = char
+                potential_word = ''.join(word_char)
+                
+                new_path = deepcopy(init_state.path)
+                new_path.append(potential_word)
+                potential_state = State(potential_word, init_state.dest_state, new_path)
+    
+                # Only add the new state if not previously generated
+                #current_cost = this_state.get_depth_from_origin(init_word) + this_state.get_depth_to_destination(new_state.state)
+                #potential_cost = new_state.get_depth_to_destination(potential_state) + 1 # Cost to potential state is 1
+                if not already_visited(new_state, visited):
+                    add_to_visited(new_state, visited)
+                    queue.append(new_state)
 
 
 def generate_word_list(file_path, word):
@@ -178,16 +160,17 @@ def main():
             if len(str(sys.argv[1])) == len(str(sys.argv[2])):
                 word1 = sys.argv[1]
                 word2 = sys.argv[2]
+                file_path = sys.argv[3]
             else:
                 print "ERROR: Both words must be of the same length!\n"
                 quit()
     else:
-        print "Proceeding with defaults\nwords.txt", word1, word2, "\n"
+        print "Proceeding with defaults\n", word1, word2, "words.txt\n"
 
     # Generate a list of words with same length as the initial word
     word_list = generate_word_list(file_path, word1)
 
-    solution = solve(word1, word2, word_list)
+    solution = solve(word1, word2)
     if solution:
         for word in solution:
             print word

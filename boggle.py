@@ -98,7 +98,7 @@ def search(this_state, grid, prefix_hash, found_words):
     if new_value in prefix_hash and prefix_hash[new_value] == 1 and new_value not in found_words:
         found_words.append(new_value)
     
-    # Loope through all the positions in the grid and recursively search
+    # Loop through all the positions in the grid and recursively search
     # exhaustively until the end
     for position in grid.getNearbyPositions(this_state.position):
         

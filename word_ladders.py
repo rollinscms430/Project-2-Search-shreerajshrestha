@@ -2,7 +2,7 @@
     File name: word_ladders.py
     Author: Shree Raj Shrestha and Alexandra DeLucia
     Date created: 2/16/2017
-    Date last modified: 2/26/2017
+    Date last modified: 2/28/2017
     Python Version: 2.7
 """
 
@@ -20,10 +20,10 @@ class State(object):
 
     def __init__(self, init_state, dest_state, path):
         """
-        Defulat constructor for State class.
+        Defualt constructor for State class.
         :param init_state: initial state (i.e. initial word)
         :param dest_state: destination state (i.e. ending word)
-        :param path: path taken so far to the initial state
+        :param path: path taken so far to the destination state
         """
         assert isinstance(init_state, str)
         assert isinstance(dest_state, str)
@@ -31,8 +31,7 @@ class State(object):
         self.state = init_state
         self.dest_state = dest_state
         self.path = path
-    
-    
+
     def __str__(self):
         """
         Returns object as formatted string.
@@ -40,15 +39,13 @@ class State(object):
         """
         return self.state + " " + self.dest_state + " " + str(self.path)
 
-
     def is_final_state(self):
         """
         Returns True if current state is the destination state, false otherwise.
         :return boolean:
         """
         return self.state == self.dest_state
-
-
+    
     def get_minimum_path_depth(self):
         """
         Returns minimum depth required to get from current state to destination.
@@ -57,7 +54,6 @@ class State(object):
         :return int: minimum theoritical depth to destination
         """
         return sum(self.state[i] != self.dest_state[i] for i in range(len(self.state)))
-
 
     def get_depth_from_origin(self, state):
         """
@@ -75,6 +71,88 @@ class State(object):
         """
         assert isinstance(state, str)
         return sum(state[i] != self.dest_state[i] for i in range(len(state)))
+
+
+def add_to_visited(state, visited):
+    """
+    Adds a state to visited
+    :param state: State object
+    :param visited: dictionary containing other visited states
+    :return: none
+    """
+    visited[state.state] = 1
+
+
+def already_visited(state, visited):
+    """
+    Checks if a state is in visited
+    :param state: State object
+    :param visited: dictionary containing other visited states
+    :return: Boolean
+    """
+    return state.state in visited
+
+
+def min_depth(word1, word2):
+    """
+    Returns the distance between word1 and word2
+    "Distance" is the number of different characters
+    :param word1: Intitial word
+    :param word2: Destination word
+    :return: number
+    """
+    return sum(word1[i] != word2[i] for i in range(len(word1)))
+
+
+def greedy_bfs(start_word, dest_word, word_list):
+    """
+    Returns path from start word to destination word
+    :param start_word: intial word
+    :param dest_word: destination word
+    :param word_list: list of valid words
+    :return: list of intermediate words between start and destination
+    """
+    # Initialize frontier queue
+    frontier = []
+    
+    # Initialize path to all words in word list with start word, the root node
+    frontier.append(start_word)
+    path_to = {word:[start_word] for word in word_list}
+    
+    # Search for solution until queue of nodes to expand is empty
+    while len(frontier) > 0:
+        
+        # Pop next node
+        this_word = frontier.pop(0)
+        
+        # If the final word is found, return the 
+        if this_word == dest_word:
+            return path_to[this_word]
+        
+        # Iterate over each character of the word
+        for i in range(len(this_word)-1,-1,-1):
+            
+            word_array = list(this_word)
+            word_array[i] = ''
+            
+            # Replace character at index for all letters in alphabet
+            for j in range(0, 26):
+                char = chr(97 + j) # chr(97) = 'a'
+                word_array[i] = char
+                new_word = ''.join(word_array)
+                
+                # Expand current node with a valid node
+                if new_word != start_word and new_word in word_list:
+                    
+                    # Only add unexplored words to frontier
+                    # If an explored word is added to the frontier, there is
+                    # a possibility of loops being formed as well as
+                    # unfeasible solutions being explored.
+                    if path_to[new_word] == [start_word]:
+                        frontier.append(new_word)
+                        
+                        # Append path taken so far with the path to new word
+                        path_to[new_word] = path_to[this_word] + [new_word]
 
 
 def search(this_state, state_space, depth_limit):
@@ -149,12 +227,10 @@ def iterative_deepening_dfs(init_state, dest_state, state_space, max_depth):
 
     # Loop until solution is found or maximum depth is reached
     while depth_limit < max_depth:
-        print "Searching at depth level ", depth_limit
         solution = search(initial_state, state_space, depth_limit)
         if len(solution) > 0:
             return solution
         else:
-            print depth_limit, " is not deep enough!\n"
             depth_limit += 1
 
     # Return empty list by default
@@ -166,14 +242,15 @@ def generate_word_list(file_path, word):
     Make a list of words with same length as a given word from file
     :param file_path: the path of the word list file
     :param word: the initial word
+    :return: list of words
     """
     try:
-        word_list = []
-        
+        word_list = {}
+
         for line in open(file_path):
             this_word = line.strip()
             if len(this_word) == len(word):
-                word_list.append(this_word)
+                word_list[this_word] = 1
         return word_list
 
     # Throw error if file not found
@@ -181,7 +258,7 @@ def generate_word_list(file_path, word):
         print "Error: The file does not exist or was not provided!\n"
 
     # Default return, empty list
-    return []
+    return {}
 
 
 def main():
@@ -191,12 +268,12 @@ def main():
     :param: none
     :return: none
     """
-    
+
     # Initialize default parameters
-    file_path = 'words.txt'
     word1 = 'snakes'
     word2 = 'brains'
-
+    file_path = 'words.txt'
+    
     # Check if user provided input parameters
     if len(sys.argv) > 1:
         if len(sys.argv) != 3:
@@ -207,21 +284,31 @@ def main():
             if len(str(sys.argv[1])) == len(str(sys.argv[2])):
                 word1 = sys.argv[1]
                 word2 = sys.argv[2]
+                file_path = sys.argv[3]
             else:
                 print "ERROR: Both words must be of the same length!\n"
                 quit()
     else:
-        print "Proceeding with defaults\nwords.txt", word1, word2, "\n"
+        print "Proceeding with defaults\n", word1, word2, "words.txt\n"
 
     # Generate a list of words with same length as the initial word
     word_list = generate_word_list(file_path, word1)
-
+    
+    print "Solving using Greedy Breadth First Search..."
+    solution = greedy_bfs(word1, word2, word_list)
+    if solution:
+        for word in solution:
+            print word
+    else:
+        print "No Solution Found!\n"
+    
     # Solve the word ladder puzzle using iterative deepening dfs technique
     # NOTE: The theoretical maximum for moves is size of the word list minus 1
     # Proof: For word list ['do','de','be','by','my']
     # Assuming that words in path cannot be used
     # From 'do' to 'my', the only possible path is the list itself in order
     # The number of moves in this case is 4, size of list minus 1
+    print "\nSolving using Iterative Deepening Depth First Search..."
     max_depth = len(word_list) - 1
     solution = iterative_deepening_dfs(word1, word2, word_list, max_depth)
     if solution is not []:
